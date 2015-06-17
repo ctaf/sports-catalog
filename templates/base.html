@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <title>Sports catalog</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-fixed-top">
+      <div class="container-fluid">
+
+        {% with messages = get_flashed_messages(category_filter=['login']) %}
+          {% if messages %}
+            <div class='nav messages'>
+              <p>{{messages[0]}}</p>
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <ul class="nav navbar-right">
+          <li><a href="/">Home</a></li>
+        </ul>
+        <ul class="nav navbar-right">
+          <li class="active">
+            {% if 'username' in session %}
+              <a href="/logout">Logout</a>
+            {% else %}
+              <a href="/login">Login</a>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
+    </nav><!-- /.navbar -->
+
+    <div id="wrapper">
+      {% block left %}{% endblock %}
+
+      <div id="page-content-wrapper">
+        <div class="container-fluid">
+
+          <div class="row">
+            {% block middle %}{% endblock %}
+          </div><!--/row-->
+
+        </div><!--/.container-fluid-->
+      </div><!--/#page-content-wrapper-->
+    </div><!-- /#wrapper -->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    {% block scripts %}{% endblock %}
+
+  </body>
+</html>
+
