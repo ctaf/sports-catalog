@@ -1,29 +1,12 @@
 <head>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-<meta name="google-signin-cookiepolicy" content="single_host_origin">
+<script src="//apis.google.com/js/platform.js?onload=start"> </script>
 </head>
 
 {% extends "base.html" %}
 {% block middle %}
 
-<!-- <div id="signInButton" class='socialContainer'> -->
-<!--     <span class="g-signin" -->
-<!--         data-scope="openid email" -->
-<!--         data-clientid="13140951618-15nik769cellkubaqnjk5facdib2dh4d.apps.googleusercontent.com" -->
-<!--         data-redirecturi="postmessage" -->
-<!--         data-accesstype="offline" -->
-<!--         data-cookiepolicy="single_host_origin" -->
-<!--         data-callback="signInCallback" -->
-<!--         data-approvalprompt="force"> -->
-<!--     </span> -->
-
-    <!-- <div id="gSignInWrapper"> -->
-    <!--   <div id="custom_google_btn" class="g-signin customGPlusSignIn"> -->
-    <!--     <span class="icon"></span> -->
-    <!--     <span class="buttonText">Sign in with Google</span> -->
-    <!--   </div> -->
-    <!-- </div> -->
 
     <div id="g_results"></div>
 
@@ -36,7 +19,6 @@
           <a class='btn btn-danger g-overlay' style="width:12em;">Sign in with Google</a>
         </div>
 
-<div id="result"></div>
 
 <div id="fb-root"></div>
 
@@ -63,7 +45,7 @@
         'clientid': "263029713888-72n6vph88p7ehsbr0gkjgmnlm7erc1rl.apps.googleusercontent.com",
         'redirecturi': "postmessage",
         'accesstype': "offline",
-        'data-cookiepolicy': "single_host_origin",
+        'cookiepolicy': "single_host_origin",
         'callback': "signInCallback",
         'approvalprompt': "force"
     });
@@ -115,7 +97,7 @@
         // Facebook SDK
         add('//connect.facebook.net/en_US/all.js#xfbml=1&appId=802073163222861', 'facebook-jssdk');
         // Google+ button
-        add('//apis.google.com/js/platform.js')
+        //add('//apis.google.com/js/platform.js')
 
         fjs.parentNode.insertBefore(frag, fjs);
 
