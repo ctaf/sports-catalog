@@ -23,55 +23,49 @@ h1 {
     margin-top: 2em;
 }
 
-.socialContainer {
-  position: relative;
-  display: none;
-}
-
 #signInButton>div:first-child {
   visibility: hidden;
 }
 
 #custom_google_btn {
-    display: block;
-    color: #737373;
-    border-radius: 3px;
-    white-space: nowrap;
-    width: 235px;
-    margin: 0 auto;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #D7D7D7;
-    border-color: rgba(155, 155, 155, 0.3);
+    /* padding: 0; */
+    /* width: 15em; */
+    /* display: block; */
+    /* color: #737373; */
+    /* border-radius: 3px; */
+    /* white-space: nowrap; */
+    /* width: 235px; */
+    /* margin: 0 auto; */
+    /* border-width: 1px; */
+    /* border-style: solid; */
+    /* border-color: #D7D7D7; */
+    /* border-color: rgba(155, 155, 155, 0.3); */
 }
 #custom_google_btn:hover {
-    background: #F7F7F7;
-    cursor: pointer;
-    border-style: inset;
+    /* background: #F7F7F7; */
+    /* cursor: pointer; */
+    /* border-style: inset; */
 }
+
+.fb-container>a {
+  width: 3em;
+}
+
 span.icon {
+    width: 3em;
     background: url('https://developers.google.com/+/images/branding/button-gplus.png') transparent 2px 50% no-repeat;
     background-size: 40px;
     display: inline-block;
     vertical-align: middle;
-    width: 45px;
     height: 40px;
     border-right: #DADADA 1px solid;
 }
 span.buttonText {
     display: inline-block;
-    vertical-align: middle;
-    padding-left: 25px;
-    padding-right: 30px;
-    font-size: 15px;
-    font-weight: bold;
-    font-family: 'Roboto',arial,sans-serif;
+    width: 12em;
+    text-align: left;
+    padding-left: 12px;
 }                  
-
-.btn-group {
-  position: absolute;
-  left: 0;
-}
 
 .btn-group>a.btn {
   opacity: 1;
