@@ -38,6 +38,12 @@ app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
 
 # Helper functions
 
+def purge_session(session, key):
+    if session.get(key):
+        del session[key]
+        return True
+
+
 def genAppSecretProof(app_secret, access_token):
     h = hmac.new (
         app_secret.encode('utf-8'),
@@ -203,7 +209,7 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        del login_session['credentials']
+        purge_session(login_session, 'credentials')
         return 'Current user is already connected.'
 
     # Store the access token in the session for later use.
@@ -237,18 +243,18 @@ def disconnect():
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
-            del login_session['gplus_id']
-            del login_session['credentials']
+            purge_session(login_session, 'gplus_id')
+            purge_session(login_session, 'credentials')
 
         elif login_session['provider'] == 'facebook':
             fbdisconnect()
-            del login_session['facebook_id']
+            purge_session(login_session, 'facebook_id')
 
-        del login_session['provider']
+        purge_session(login_session, 'provider')
 
-    del login_session['username']
-    del login_session['email']
-    del login_session['picture']
+    purge_session(login_session, 'username')
+    purge_session(login_session, 'email')
+    purge_session(login_session, 'picture')
     message = 'You have been logged out.'
 
     return render_template('info.html', message=message)

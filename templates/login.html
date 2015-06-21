@@ -1,26 +1,17 @@
 <head>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-<script src="//apis.google.com/js/platform.js?onload=start"> </script>
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 </head>
 
 {% extends "base.html" %}
 {% block middle %}
 
-
-    <div id="g_results"></div>
-
-        <!-- <a class='btn btn-danger disabled'><i class="fa fa-google-plus" style="width:16px; height:20px"></i></a> -->
-        <!-- <a class='btn btn-danger g-overlay g-signin customGPlusSignIn' href='' style="width:12em;"> -->
-        <div id="custom_google_btn" class="g-signin customGPlusSignIn btn-group">
-          <!-- <span class="icon"></span> -->
-          <a class='btn btn-danger disabled'><i class="fa fa-google-plus" style="width:16px; height:20px"></i></a>
-          <!-- <span class="buttonText">Sign in with Google</span> -->
-          <a class='btn btn-danger g-overlay' style="width:12em;">Sign in with Google</a>
-        </div>
+    <div id="custom_google_btn" class="g-signin customGPlusSignIn btn-group">
+      <a class='btn btn-danger disabled'><i class="fa fa-google-plus" style="width:16px; height:20px"></i></a>
+      <a class='btn btn-danger g-overlay' style="width:12em;">Sign in with Google</a>
+    </div>
 
 
-<div id="fb-root"></div>
+    <div id="fb-root"></div>
 
     <div class="btn-group fb-container">
         <a class='btn btn-primary disabled'><i class="fa fa-facebook" style="width:16px; height:20px"></i></a>
@@ -29,58 +20,14 @@
         </button>
     </div>  
 
-<div class="preloader"></div>
+    <div class="preloader"></div>
 
-<div id="status">
-</div>
+    <div class="alert alert-info status"></div>
 
 {% endblock %}
 
 {% block scripts %}
 <script>
-
-    function render_google_btn() {
-    gapi.signin.render('custom_google_btn', {
-        'scope': "openid email",
-        'clientid': "263029713888-72n6vph88p7ehsbr0gkjgmnlm7erc1rl.apps.googleusercontent.com",
-        'redirecturi': "postmessage",
-        'accesstype': "offline",
-        'cookiepolicy': "single_host_origin",
-        'callback': "signInCallback",
-        'approvalprompt': "force"
-    });
-}
-
-//function google_login_callback (authResult) {
-//  console.log('here');
-//    if (authResult['status']['signed_in'] && authResult['status']['method'] == 'PROMPT') {
-//        // Hide the sign-in button now that the user is authorized, for example:
-//        document.getElementById('gSignInWrapper').setAttribute('style', 'display: none');
-//        gapi.client.load('plus', 'v1', function() {
-//
-//            var request = gapi.client.plus.people.get({
-//                'userId' : 'me'
-//            });
-//            request.execute(function(resp) {
-//                if (resp['emails']) {
-//                    for (var i = 0; i < resp['emails'].length; i++) {
-//                        if (resp['emails'][i]['type'] == 'account') {
-//                            email = resp['emails'][i]['value'];
-//                        }
-//                    }
-//                }
-//                Id = resp.id;
-//            });
-//        });
-//
-//    } else if (authResult['error']) {
-//        // There was an error.
-//        // Possible error codes:
-//        //   "access_denied" - User denied access to your app
-//        //   "immediate_failed" - Could not automatially log in the user
-//        console.log('Sign-in state: ' + authResult['error']);
-//    }
-//}
 
     (function(doc, script) {
       var js, 
@@ -94,10 +41,11 @@
               frag.appendChild( js );
           };
           
+        add('//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js')
         // Facebook SDK
         add('//connect.facebook.net/en_US/all.js#xfbml=1&appId=802073163222861', 'facebook-jssdk');
         // Google+ button
-        //add('//apis.google.com/js/platform.js')
+        add('//apis.google.com/js/platform.js?onload=start')
 
         fjs.parentNode.insertBefore(frag, fjs);
 
@@ -106,21 +54,27 @@
         });
 
         $(window).load(function() {
-          $('.btn-group').show();
           $(".preloader").fadeOut("slow");;
           render_google_btn();
         });
         
     }(document, 'script'));
 
-    // Google Plus sign-in
+    function render_google_btn() {
+      gapi.signin.render('custom_google_btn', {
+          'scope': "openid email",
+          'clientid': "263029713888-72n6vph88p7ehsbr0gkjgmnlm7erc1rl.apps.googleusercontent.com",
+          'redirecturi': "postmessage",
+          'accesstype': "offline",
+          'cookiepolicy': "single_host_origin",
+          'callback': "signInCallback",
+          'approvalprompt': "force"
+          });
+    }
 
+    // Google Plus sign-in
     function signInCallback(authResult) {
-        console.log('here');
-        console.log(authResult);
         if (authResult['code']) {
-            console.log('there');
-            $('#signinButton').attr('style', 'display: none');
             $.ajax({
                 type: 'POST',
                 url: '/gconnect?state={{state}}',
@@ -129,38 +83,31 @@
                 contentType: 'application/octet-stream; charset=utf-8',
                 success: function(result) {
                     if (result) {
-                        $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+                        $('.status').text('Thanks for logging in.')
+                                    .css('display', 'table');
                         setTimeout(function() {
                             window.location.href = "/";
-                            }, 400);
+                            }, 600);
 
                     } else if (authResult['error']) {
-                        console.log('There was an error: ' + authResult['error']);
+                        $('.status').text('There was an error: ' + authResult['error'])
+                                    .css('display', 'table');
                     } else {
-                        $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                        $('.status').text('Failed to make a server-side call.')
+                                    .css('display', 'table');
                     }
                 }
     }); } }
 
     // Facebook sign-in
-    
     function statusChangeCallback(response) {
-        console.log('statusChangeCallback');
-        console.log(response);
-        // The response object is returned with a status field that lets the
-        // app know the current login status of the person.
-        // Full docs on the response object can be found in the documentation
-        // for FB.getLoginStatus().
         var access_token = FB.getAuthResponse()['accessToken'];
-        console.log(access_token)
-        console.log('Welcome!  Fetching your information.... ');
         if (response.status === 'connected') {
-            // Logged into your app and Facebook.
             console.log('Welcome!  Fetching your information.... ');
             FB.api('/me', function(response) {
                 console.log('Successful login for: ' + response.name);
-                document.getElementById('status').innerHTML =
-                'Thanks for logging in, ' + response.name + '!';
+                $('.status').text('Thanks for logging in.')
+                            .css('display', 'table');
                 $.ajax({
                     type: 'POST',
                     url: '/fbconnect?state={{state}}',
@@ -170,60 +117,31 @@
                     success: function(result) {
                         // Handle or verify the server response if necessary.
                         if (result) {
-                            $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
                             setTimeout(function() {
                                 window.location.href = "/";
-                                }, 400);
+                                }, 600);
 
                         } else {
-                            $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                            $('.status').text('Failed to make a server-side call. Check your configuration and console.');
                         }
                     }
                 });
             });
         } else if (response.status === 'not_authorized') {
-            // The person is logged into Facebook, but not your app.
-            document.getElementById('status').innerHTML = 'Please log ' +
-                'into this app.';
+            $('.status').text('Please log into this app.')
+                        .css('display', 'table');
         } else {
-            // The person is not logged into Facebook, so we're not sure if
-            // they are logged into this app or not.
-            document.getElementById('status').innerHTML = 'Please log ' +
-                'into Facebook.';
+            $('.status').text('Please log into Facebook.')
+                        .css('display', 'table');
         }
     }
 
-    // This function is called when someone finishes with the Login
-    // Button.  See the onlogin handler attached to it in the sample
-    // code below.
     function checkLoginState() {
         console.log('in checkLoginState');
         FB.getLoginStatus(function(response) {
                 statusChangeCallback(response);
                 });
     }
-
-    //window.fbAsyncInit = function() {
-    //    FB.init({
-    //appId      : '802073163222861',
-    //cookie     : true,  // enable cookies to allow the server to access the session
-    //version    : 'v2.2' // use version 2.2
-    //});
-
-    //FB.getLoginStatus(function(response) {
-    //        statusChangeCallback(response);
-    //        });
-
-    //};
-
-    // //Load the SDK asynchronously
-    //(function(d, s, id) {
-    // var js, fjs = d.getElementsByTagName(s)[0];
-    // if (d.getElementById(id)) return;
-    // js = d.createElement(s); js.id = id;
-    // js.src = "//connect.facebook.net/en_US/sdk.js";
-    // fjs.parentNode.insertBefore(js, fjs);
-    // }(document, 'script', 'facebook-jssdk'));
 
 </script>
 {% endblock %}
