@@ -1,12 +1,12 @@
 <div class="row">
   {% for it in items %}
     <div class="col-xs-6 col-lg-4 thumbnail">
-      <img src="/static/{{it.fname}}">
+      <img class="img-resp" src="/static/{{it.fname}}">
       <div class="caption">
         <h2>{{it.name}}</h2>
         <p>{{it.desc}}</p>
       </div><!--/.caption-->
-      <p><a class="btn btn-default" href="/catalog/{{it.cat|replace(' ', '_')}}/{{it.name|replace(' ', '_')}}" role="button">View details &raquo;</a></p>
+      <p><a class="btn btn-default btn-prev" href="/catalog/{{it.cat|replace(' ', '_')}}/{{it.name|replace(' ', '_')}}" role="button">View details &raquo;</a></p>
     </div><!--/.col-xs-6.col-lg-4-->
   {% endfor %}
 </div><!--/row-->

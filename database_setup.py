@@ -7,12 +7,12 @@ from sqlalchemy import create_engine
 Base = declarative_base()
 
 
-class CatalogItem(Base):
-    __tablename__ = 'catalog_item'
+class Item(Base):
+    __tablename__ = 'item'
 
     name = Column(String(80), nullable=False, primary_key=True)
     description = Column(Text)
-    catalog_id = Column(Integer, ForeignKey('catalog.id'), primary_key=True)
+    category_id = Column(Integer, ForeignKey('category.id'), primary_key=True)
     image_id = Column(Integer, ForeignKey('image.id'))
     updated_on = Column(DateTime, server_default=func.now(),
                         onupdate=func.now())
@@ -22,7 +22,9 @@ class CatalogItem(Base):
         return {
             'name': self.name,
             'description': self.description,
-            'id': self.id,
+            'cat_id': self.category_id,
+            'img_id': self.image_id,
+            'updated_on': self.image_id,
         }
 
 
@@ -31,15 +33,19 @@ class Image(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(250), nullable=False)
-    item = relationship(CatalogItem, backref='image')
+    item = relationship(Item, backref='image')
 
 
-class Catalog(Base):
-    __tablename__ = 'catalog'
+class Category(Base):
+    __tablename__ = 'category'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
-    items = relationship(CatalogItem, backref='catalog', lazy='dynamic')
+    items = relationship(Item, backref='category', lazy='dynamic')
+
+    @property
+    def serialize(self):
+        return [i.serialize for i in self.items]
 
 
 engine = create_engine('sqlite:///catalogitems.db')

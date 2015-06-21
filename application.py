@@ -8,7 +8,7 @@ from oauth2client.client import AccessTokenCredentials
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Catalog, CatalogItem, Image
+from database_setup import Base, Category, Item, Image
 from functools import wraps
 import random
 import string
@@ -126,8 +126,8 @@ def fbconnect():
           (access_token, appsecret_proof)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
-    print "url sent for API access:%s" % url
-    print "API JSON result: %s" % result
+    # print "url sent for API access:%s" % url
+    # print "API JSON result: %s" % result
     data = json.loads(result)
     login_session['provider'] = 'facebook'
     login_session['username'] = data["name"]
@@ -139,18 +139,12 @@ def fbconnect():
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
 
-    # Get user picture
-    url = 'https://graph.facebook.com/v2.2/me/picture?access_token=' +\
-          access_token + '&appsecret_proof=' + appsecret_proof +\
-          '&height=200&width=200'
-
     # h = httplib2.Http()
     # result = h.request(url, 'GET')[1]
     # print "url sent for API access:%s" % url
     # print "API JSON result: %s" % result
     # data = json.loads(result)
     # login_session['picture'] = data["data"]["url"]
-    login_session['picture'] = url
 
     message = "Welcome, %s." % login_session['username']
 
@@ -227,7 +221,6 @@ def gconnect():
 
     data = answer.json()
     login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
     login_session['email'] = data['email']
     login_session['provider'] = 'google'
 
@@ -254,7 +247,6 @@ def disconnect():
 
     purge_session(login_session, 'username')
     purge_session(login_session, 'email')
-    purge_session(login_session, 'picture')
     message = 'You have been logged out.'
 
     return render_template('info.html', message=message)
@@ -312,118 +304,115 @@ def gdisconnect():
 
 @app.route('/')
 def mainpage():
-    cats = session.query(Catalog).all()
+    cats = session.query(Category).all()
     app.config['CATEGORIES'] = cats
-    it_obj = session.query(CatalogItem).\
-             order_by(CatalogItem.updated_on).limit(10).all()
+    it_obj = session.query(Item).\
+             order_by(Item.updated_on).limit(10).all()
     it_names = [{'name': i.name, 'desc': i.description,
-                 'fname': i.image.filename, 'cat': i.catalog.name}
+                 'fname': i.image.filename, 'cat': i.category.name}
                 for i in it_obj]
     return render_template('main.html', cats=cats, items=it_names)
 
 
 @app.route('/catalog.json')
-def catalogJSON():
-    items = session.query(CatalogItem).all()
-    return jsonify(CatalogItems=[i.serialize for i in items])
+def categoryJSON():
+    cats = session.query(Category).all()
+    return jsonify(Categories=[c.serialize for c in cats])
 
 
-@app.route('/catalog/<string:catalog_name>/<string:item_name>')
+@app.route('/catalog/<string:category_name>/<string:item_name>')
 @whitespace
-def catalogItem(catalog_name, item_name):
-    item = session.query(CatalogItem).join(Catalog).filter(Catalog.name ==
-            catalog_name).filter(CatalogItem.name == item_name).one()
+def categoryItem(category_name, item_name):
+    item = session.query(Item).join(Category).filter(Category.name ==
+            category_name).filter(Item.name == item_name).one()
     return render_template('item.html', item=item)
 
 
-@app.route('/catalog/<string:catalog_name>/items')
+@app.route('/catalog/<string:category_name>/items')
 @whitespace
-def catalog(catalog_name):
-    cats = session.query(Catalog).all()
-    cat = session.query(Catalog).filter_by(name=catalog_name).one()
+def category(category_name):
+    cats = session.query(Category).all()
+    cat = session.query(Category).filter_by(name=category_name).one()
     it_names = ({'name': i.name, 'desc': i.description,
-                 'fname': i.image.filename, 'cat': i.catalog.name}
+                 'fname': i.image.filename, 'cat': i.category.name}
                 for i in cat.items)
-    return render_template('catalog.html', cats=cats, items=it_names)
+    return render_template('category.html', cats=cats, items=it_names)
 
 
-@app.route('/catalog/<string:catalog_name>/edit', methods=['GET', 'POST'])
-def newCatalogItem(catalog_name):
+@app.route('/catalog/<string:category_name>/edit', methods=['GET', 'POST'])
+@whitespace
+def newItem(category_name):
 
-    catalog = session.query(Catalog).filter_by(name=catalog_name).one()
-    print catalog, catalog_name
-    print request.form
-    print request.method
+    # Make sure that the category list has been initialized
+    if not app.config.get('CATEGORIES'):
+        app.config['CATEGORIES'] = session.query(Category).all()
+
+    category = session.query(Category).filter_by(name=category_name).one()
 
     if request.method == 'POST':
-
         imgfile = request.files.get('image')
-        print request.files
-        print 'imgfile: ', imgfile
 
         if imgfile and allowed_file(imgfile.filename.lower()):
             filename = secure_filename(imgfile.filename)
-            print 'filename: ', filename
             imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))
             image = Image(filename=filename)
-            newItem = CatalogItem(name=request.form['name'],
+            newItem = Item(name=request.form['name'],
                                   description=request.form['description'],
-                                  catalog=catalog,
+                                  category=category,
                                   image=image)
         else:
-            newItem = CatalogItem(name=request.form['name'],
+            newItem = Item(name=request.form['name'],
                                   description=request.form['description'],
-                                  catalog=catalog,
+                                  category=category,
                                   image=Image(filename=''))
         session.add(newItem)
         session.commit()
-        return redirect(url_for('catalog', catalog_name=catalog.name))
+        return redirect(url_for('category', category_name=category.name))
     else:
-        print 'here'
-        return render_template('newitem.html', catalog_name=catalog_name)
+        return render_template('newitem.html', category_name=category_name)
 
 
-@app.route('/catalog/<string:catalog_name>/<string:item_name>/edit',
+@app.route('/catalog/<string:category_name>/<string:item_name>/edit',
            methods=['GET', 'POST'])
 @whitespace
-def editCatalogItem(catalog_name, item_name):
-    editedItem = session.query(CatalogItem).join(Catalog).filter(Catalog.name ==
-            catalog_name).filter(CatalogItem.name == item_name).one()
+def editItem(category_name, item_name):
+    editedItem = session.query(Item).join(Category).filter(Category.name ==
+            category_name).filter(Item.name == item_name).one()
+
     if request.method == 'POST':
         imgfile = request.files.get('image')
 
         if imgfile and allowed_file(imgfile.filename.lower()):
             filename = secure_filename(imgfile.filename)
-            print 'filename: ', filename
             imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))
             editedItem.image = Image(filename=filename)
 
         editedItem.name = request.form['name']
         editedItem.description = request.form['description']
- 	newCategory = session.query(Catalog).filter_by(name=request.form['category_name']).one()
-        editedItem.catalog_id = newCategory.id
+ 	newCategory = session.query(Category).filter_by(name=request.form['category_name']).one()
+        editedItem.category_id = newCategory.id
         session.add(editedItem)
         session.commit()
 
-        return redirect(url_for('catalog',
-            catalog_name=newCategory.name.replace(' ', '_')))
+        return redirect(url_for('category',
+            category_name=newCategory.name.replace(' ', '_')))
 
     else:
         return render_template('newitem.html', item=editedItem)
 
 
-@app.route('/catalog/<string:catalog_name>/<string:item_name>/delete',
+@app.route('/catalog/<string:category_name>/<string:item_name>/delete',
            methods=['GET', 'POST'])
 @whitespace
-def deleteCatalogItem(catalog_name, item_name):
+def deleteItem(category_name, item_name):
 
-    deleteItem = session.query(CatalogItem).join(Catalog).filter(Catalog.name ==
-            catalog_name).filter(CatalogItem.name == item_name).one()
+    deleteItem = session.query(Item).join(Category).filter(Category.name ==
+            category_name).filter(Item.name == item_name).one()
 
     if request.method == 'POST':
         session.delete(deleteItem)
         session.commit()
-        return redirect(url_for('catalog', catalog_name=catalog_name))
+        return redirect(url_for('category', category_name=category_name))
     else:
         return render_template('deleteitem.html', item=deleteItem)
 

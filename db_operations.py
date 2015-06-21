@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Catalog, Base, CatalogItem, Image
+from database_setup import Category, Base, Item, Image
 
 
 def fill_db(session, cat, items):
@@ -16,17 +16,17 @@ session = DBSession()
 
 
 # Climbing items
-catalog1 = Catalog(name="Climbing")
+category1 = Category(name="Climbing")
 items1 = (
-    CatalogItem(
+    Item(
         name="Rope",
         description=(
             "Climbing ropes are typically of kernmantle construction,"
             "consisting of a core (kern) of long twisted fibres and an outer"
             "sheath (mantle) of woven coloured fibres."),
-        catalog=catalog1,
+        category=category1,
         image=Image(filename="rope.jpg")),
-    CatalogItem(
+    Item(
         name="Climbing shoes",
         description=(
             "Specifically designed foot wear is usually worn for climbing."
@@ -34,52 +34,52 @@ items1 = (
             "face due to friction, the shoe is soled with a vulcanized rubber"
             "layer. Usually, shoes are only a few millimetres thick and fit"
             "very snugly around the foot."),
-        catalog=catalog1,
+        category=category1,
         image=Image(filename="climbing_shoes.jpg")),
-    CatalogItem(
+    Item(
         name="Helmet",
         description=(
             "The climbing helmet is a piece of safety equipment that"
             "primarily protects the skull against falling debris (such as"
             "rocks or dropped pieces of protection) and impact forces during"
             "a fall."),
-        catalog=catalog1,
+        category=category1,
         image=Image(filename="climbing_helmet.jpg"))
 )
 
-fill_db(session, catalog1, items1)
+fill_db(session, category1, items1)
 
 # Biking items
-catalog2 = Catalog(name="Mountain biking")
+category2 = Category(name="Mountain biking")
 items2 = (
-    CatalogItem(
+    Item(
         name="Mountain bike",
         description=(
             "A mountain bike (abbreviated MTB) is a bicycle created for "
             "off-road cycling. Mountain bikes are typically ridden on "
             "mountain trails, fire roads, logging roads, Single Track and"
             "other unpaved environments."),
-        catalog=catalog2,
+        category=category2,
         image=Image(filename="mtb.jpg")),
-    CatalogItem(
+    Item(
         name="Gloves",
         description=(
             "Gloves differ from road touring gloves, are made of heavier"
             "construction, and often have covered thumbs or all fingers"
             "covered for hand protection. They are sometimes made with"
             "padding for the knuckles."),
-        catalog=catalog2,
+        category=category2,
         image=Image(filename="gloves.jpg")),
-    CatalogItem(
+    Item(
         name="Helmet",
         description=(
             "Helmets provide important head protection. The use of helmets,"
             "in one form or another, is almost universal amongst all mountain"
             "bikers."),
-        catalog=catalog2,
+        category=category2,
         image=Image(filename="mtb_helmet.jpg")),
 )
 
-fill_db(session, catalog2, items2)
+fill_db(session, category2, items2)
 
 print "added menu items!"

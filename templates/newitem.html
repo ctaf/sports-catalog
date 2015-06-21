@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block middle %}
     {% if item %}
-      {% set cat = item.catalog.name.replace(' ', '_') %}
+      {% set cat = item.category.name.replace(' ', '_') %}
       {% set iname = item.name.replace(' ', '_') %}
-      <form action="{{url_for('editCatalogItem', catalog_name=cat, item_name=iname)}}"
+      <form action="{{url_for('editItem', category_name=cat, item_name=iname)}}"
           enctype="multipart/form-data" method = 'POST'>
     {% else %}
-      <form action="{{url_for('newCatalogItem', catalog_name=catalog_name )}}"
+      <form action="{{url_for('newItem', category_name=category_name )}}"
         enctype="multipart/form-data" method = 'POST'>
     {% endif %}
 
@@ -38,7 +38,7 @@
       <label for="input3">Category</label>
       <select id="input3" class="form-control" name="category_name">
         {% if item %}
-          {% set currentCat = item.catalog.name %}
+          {% set currentCat = item.category.name %}
           <option>{{currentCat}}</option>
           {% for cat in config['CATEGORIES'] %}
             {% if cat.name != currentCat %}
@@ -63,14 +63,14 @@
       {% endif %}
 
       {% if item and item.image.filename %}
-        <img src="/static/{{item.image.filename}}" class="thumbnail">
+        <img src="/static/{{item.image.filename}}" class="thumbnail img-resp">
       {% endif %}
     </div>
 
     {% if item %}
-        <button type="submit" class="btn btn-default">Update</button>
+        <button type="submit" class="btn btn-default btn-edit">Update</button>
     {% else %}
-        <button type="submit" class="btn btn-default">Create</button>
+        <button type="submit" class="btn btn-default btn-edit">Create</button>
     {% endif %}
 
   </form>

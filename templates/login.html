@@ -10,9 +10,6 @@
       <a class='btn btn-danger g-overlay' style="width:12em;">Sign in with Google</a>
     </div>
 
-
-    <div id="fb-root"></div>
-
     <div class="btn-group fb-container">
         <a class='btn btn-primary disabled'><i class="fa fa-facebook" style="width:16px; height:20px"></i></a>
         <button class='btn btn-primary fb-overlay' style="width:12em">
@@ -20,6 +17,7 @@
         </button>
     </div>  
 
+    <div id="fb-root"></div>
     <div class="preloader"></div>
 
     <div class="alert alert-info status"></div>
@@ -54,7 +52,7 @@
         });
 
         $(window).load(function() {
-          $(".preloader").fadeOut("slow");;
+          $(".preloader").fadeOut();;
           render_google_btn();
         });
         
@@ -74,6 +72,7 @@
 
     // Google Plus sign-in
     function signInCallback(authResult) {
+        $(".preloader").fadeIn();;
         if (authResult['code']) {
             $.ajax({
                 type: 'POST',
@@ -83,6 +82,7 @@
                 contentType: 'application/octet-stream; charset=utf-8',
                 success: function(result) {
                     if (result) {
+                        $(".preloader").fadeOut();;
                         $('.status').text('Thanks for logging in.')
                                     .css('display', 'table');
                         setTimeout(function() {
@@ -103,9 +103,8 @@
     function statusChangeCallback(response) {
         var access_token = FB.getAuthResponse()['accessToken'];
         if (response.status === 'connected') {
-            console.log('Welcome!  Fetching your information.... ');
             FB.api('/me', function(response) {
-                console.log('Successful login for: ' + response.name);
+                $(".preloader").fadeOut();;
                 $('.status').text('Thanks for logging in.')
                             .css('display', 'table');
                 $.ajax({
@@ -137,7 +136,7 @@
     }
 
     function checkLoginState() {
-        console.log('in checkLoginState');
+        $(".preloader").fadeIn();;
         FB.getLoginStatus(function(response) {
                 statusChangeCallback(response);
                 });
