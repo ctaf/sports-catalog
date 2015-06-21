@@ -16,23 +16,23 @@
     <nav class="navbar navbar-fixed-top">
       <div class="container-fluid">
 
-        {% with messages = get_flashed_messages(category_filter=['login']) %}
-          {% if messages %}
-            <div class='nav messages'>
-              <p>{{messages[0]}}</p>
-            </div>
-          {% endif %}
-        {% endwith %}
-
         <ul class="nav navbar-right">
-          <li><a href="/">Home</a></li>
+          <li>
+            <a href="/">
+              <span class="glyphicon glyphicon-home"></span>Home
+            </a>
+          </li>
         </ul>
         <ul class="nav navbar-right">
           <li class="active">
             {% if 'username' in session %}
-              <a href="/logout">Logout</a>
+              <a href="/logout">
+                <span class="glyphicon glyphicon-log-out"></span>Logout
+              </a>
             {% else %}
-              <a href="/login">Login</a>
+              <a href="/login">
+                <span class="glyphicon glyphicon-log-in"></span>Login
+              </a>
             {% endif %}
           </li>
         </ul>

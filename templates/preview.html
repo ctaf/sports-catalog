@@ -6,7 +6,7 @@
         <h2>{{it.name}}</h2>
         <p>{{it.desc}}</p>
       </div><!--/.caption-->
-      <p><a class="btn btn-default" href="/catalog/{{it.cat}}/{{it.name|replace(' ', '_')}}" role="button">View details &raquo;</a></p>
+      <p><a class="btn btn-default" href="/catalog/{{it.cat|replace(' ', '_')}}/{{it.name|replace(' ', '_')}}" role="button">View details &raquo;</a></p>
     </div><!--/.col-xs-6.col-lg-4-->
   {% endfor %}
 </div><!--/row-->

@@ -2,7 +2,9 @@
   <ul class="sidebar-nav">
     {% for cat in cats %}
       <li>
-        <a href="/catalog/{{cat.name|replace(' ', '_')}}/items">{{cat.name}}</a>
+        <a href="/catalog/{{cat.name|replace(' ', '_')}}/items">
+          <span class="glyphicon glyphicon-th-large"></span>{{cat.name}}
+        </a>
       </li>
     {% endfor %}
   </ul>

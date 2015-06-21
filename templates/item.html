@@ -1,7 +1,30 @@
 {% extends "base.html" %}
 {% block middle %}
-    <div>
-      <h1>{{item.name}}</h1>
-      <p>{{item.description}}</p>
+
+  <div class="media">
+    <div class="media-left">
+      <img class="media-object" src="/static/{{item.image.filename}}">
     </div>
+
+    <div class="media-body">
+      <h3 class="media-heading">{{item.name}}</h3>
+      <p>{{item.description}}</p>
+
+      {% if 'username' in session %}
+        {% set components = request.path|split('/') %}
+
+        <div class="btn-container">
+          <a class="btn btn-default btn-edit" href="{{request.path}}/edit" role="button">
+            <span class="glyphicon glyphicon-pencil"></span>Edit
+          </a>
+
+          <a class="btn btn-default btn-edit" href="{{request.path}}/delete" role="button">
+            <span class="glyphicon glyphicon-pencil"></span>Delete
+          </a>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
 {% endblock %}
