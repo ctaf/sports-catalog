@@ -3,7 +3,9 @@
 
   <div class="media">
     <div class="media-left">
-      <img class="media-object img-resp" src="/static/{{item.image.filename}}">
+      {% if item.image.filename %}
+        <img class="media-object img-resp" src="/static/{{item.image.filename}}">
+      {% endif %}
     </div>
 
     <div class="media-body">

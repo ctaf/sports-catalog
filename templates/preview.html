@@ -1,7 +1,9 @@
 <div class="row">
   {% for it in items %}
     <div class="col-xs-6 col-lg-4 thumbnail">
-      <img class="img-resp" src="/static/{{it.fname}}">
+      {% if it.fname %}
+        <img class="img-resp" src="/static/{{it.fname}}">
+      {% endif %}
       <div class="caption">
         <h2>{{it.name}}</h2>
         <p>{{it.desc}}</p>

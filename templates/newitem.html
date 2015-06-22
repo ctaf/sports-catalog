@@ -9,6 +9,7 @@
       <form class="as-table" action="{{url_for('newItem', category_name=category_name )}}"
         enctype="multipart/form-data" method = 'POST'>
     {% endif %}
+    {{form.hidden_tag()}}
 
     {% if item %}
     <p class="lead">Update item</p>
