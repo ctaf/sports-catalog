@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block left %}
+  {% include 'sidebar.html' %}
+{% endblock %}
+
+{% block middle %}
+  {% if 'username' in session %}
+    {% set components = request.path|split('/') %}
+    <a class="btn btn-default btn-edit" href="/catalog/{{components[2]}}/edit" role="button">
+      <i class="fa fa-pencil"></i>New item
+    </a>
+  {% endif %}
+  {% include 'preview.html' %}
+{% endblock %}

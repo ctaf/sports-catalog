@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, jsonify, flash
+from flask import Flask, render_template, url_for, request, redirect, jsonify, make_response
 from flask import session as login_session
 from werkzeug import secure_filename
 
@@ -138,13 +138,6 @@ def fbconnect():
     # let's strip out the information before the equals sign in our token
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
-
-    # h = httplib2.Http()
-    # result = h.request(url, 'GET')[1]
-    # print "url sent for API access:%s" % url
-    # print "API JSON result: %s" % result
-    # data = json.loads(result)
-    # login_session['picture'] = data["data"]["url"]
 
     message = "Welcome, %s." % login_session['username']
 
@@ -318,6 +311,29 @@ def mainpage():
 def categoryJSON():
     cats = session.query(Category).all()
     return jsonify(Categories=[c.serialize for c in cats])
+
+
+@app.route('/catalog.xml')
+def categoryXML():
+    import xml.etree.ElementTree as ET
+
+    root = ET.Element('root')
+    cats = session.query(Category).all()
+
+    for cat in cats:
+        cat_el = ET.SubElement(root, 'category')
+        cat_el.text = cat.name
+        for it in cat.items:
+            it_el = ET.SubElement(cat_el, 'item')
+            ET.SubElement(it_el, 'name').text = it.name
+            ET.SubElement(it_el, 'description').text = it.description
+            ET.SubElement(it_el, 'updated_on').text = "{:%B %d, %Y}".format(it.updated_on)
+            ET.SubElement(it_el, 'cat_id').text = str(it.category_id)
+
+    response = make_response(ET.tostring(root))
+    response.headers["Content-Type"] = "application/xml"
+
+    return response
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>')

@@ -23,8 +23,7 @@ class Item(Base):
             'name': self.name,
             'description': self.description,
             'cat_id': self.category_id,
-            'img_id': self.image_id,
-            'updated_on': self.image_id,
+            'updated_on': self.updated_on,
         }
 
 

@@ -5,13 +5,22 @@ h1 {
     margin-bottom: 0.4em;
 }
 
+.fa,
 .glyphicon {
     margin-right: 0.5em;
+}
+
+.nav.navbar-nav a {
+  padding-top: 10px;
 }
 
 .img-resp {
   max-width: 15em;
   max-height: 15em;
+}
+
+.as-table {
+  display: table;
 }
 
 /* Info page */
@@ -28,6 +37,12 @@ h1 {
     margin-top: 2em;
 }
 
+.fa.fa-facebook,
+.fa.fa-google-plus {
+  margin: 0;
+}
+
+.g-signin>a,
 .fb-container>a {
   width: 3em;
 }
@@ -58,11 +73,7 @@ h1 {
 
 /* Delete page */
 
-.del-form {
-  display: table;
-}
-
-.del-form .btn {
+.as-table .btn {
   display: table;
   margin: 1em auto 0.5em auto;
 }
@@ -168,6 +179,28 @@ form .lead {
 }
 
 /* Navbar */
+
+.top-drop {
+  text-indent: 5px;
+}
+
+.top-drop>a.dropdown-toggle {
+  transition: all 0.4s ease-in;
+  -moz-transition: all 0.4s ease-in;
+  -webkit-transition: all 0.4s ease-in;
+}
+
+.top-drop>a.dropdown-toggle:focus {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.top-drop .dropdown-menu {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.top-drop .dropdown-menu a:hover {
+  color: #131313;
+}
 
 .navbar.navbar-fixed-top {
     margin: 0;
