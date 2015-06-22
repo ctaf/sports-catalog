@@ -10,7 +10,8 @@ For a mobile-friendly experience, the whole design is based on Bootstrap.
 1. Clone this repo.
 2. Get the Vagrantfile from the [fullstack-nanodegree-vm repository] (https://github.com/udacity/fullstack-nanodegree-vm).
 3. Install and run a Vagrant VM with the Vagrantfile.
-4. Configure the home directory of your VM to be able to run the Tournament Planner code.
+4. Be sure to have Flask-WTF installed, or install it via
+   `pip install Flask-WTF`
 5. Create the database by calling `database_setup.py`.
 6. Pre-fill the database with some example data by calling `fill_database.py`.
 7. Run the app with `application.py`.

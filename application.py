@@ -10,6 +10,8 @@ import hmac
 
 import xml.etree.ElementTree as ET
 from werkzeug import secure_filename
+from flask_wtf import Form
+from flask_wtf.csrf import generate_csrf, validate_csrf
 
 from flask import Flask, render_template, url_for, request
 from flask import redirect, jsonify, make_response
@@ -23,13 +25,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database_setup import Base, Category, Item, Image
-from flask_wtf import Form
-# from wtforms import StringField
-# from wtforms.validators import DataRequired
-
-
-class ItemForm(Form):
-        pass
 
 
 # Keep XSS in mind and limit the file extensions
@@ -46,6 +41,12 @@ dbsession = sessionmaker(bind=engine)()
 app = Flask(__name__)
 app.config['IMG_FOLDER'] = 'static/'  # folder for image upload
 app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
+
+
+# The Form class from Flask-WTF is only needed for the CSRF token in the
+# templates, so an empty sub class is sufficient.
+class ItemForm(Form):
+        pass
 
 
 ##### Helper functions #####
@@ -258,9 +259,10 @@ def deleteItem(category_name, item_name):
 @app.route('/login')
 def showLogin():
     # Generate a CSRF token and store it in the session
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
-    login_session['state'] = state
+    # state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+    #                 for x in xrange(32))
+    # login_session['state'] = state
+    login_session['state'] = generate_csrf()
 
     return render_template('login.html', state=state)
 
@@ -291,7 +293,8 @@ def disconnect():
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     # Validate state token
-    if request.args.get('state') != login_session['state']:
+    # if request.args.get('state') != login_session['state']:
+    if not validate_csrf(request.args.get('state')):
         message = "Invalid state parameter."
         return render_template('info.html', message=message)
 
