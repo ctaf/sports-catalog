@@ -11,7 +11,7 @@
         <button class='btn btn-primary fb-overlay' style="width:12em">
           Sign in with Facebook
         </button>
-    </div>  
+    </div>
 
     <div id="fb-root"></div>
     <div class="preloader"></div>
@@ -23,8 +23,10 @@
 {% block scripts %}
 <script>
 
+    // Couple loading of G+ and FB scripts, as the FB part is usually much
+    // slower. This way both login buttons are shown simultaneously to the user.
     (function(doc, script) {
-      var js, 
+      var js,
           fjs = doc.getElementsByTagName(script)[0],
           frag = doc.createDocumentFragment(),
           add = function(url, id) {
@@ -34,24 +36,25 @@
               id && (js.id = id);
               frag.appendChild( js );
           };
-          
+
         add('//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js')
         // Facebook SDK
         add('//connect.facebook.net/en_US/all.js#xfbml=1&appId=802073163222861', 'facebook-jssdk');
         // Google+ button
         add('//apis.google.com/js/platform.js?onload=start')
-
         fjs.parentNode.insertBefore(frag, fjs);
 
+        // Bind the login logic to the customized FB login button
         $('.fb-overlay').click(function() {
           FB.login(checkLoginState);
         });
 
+        // Remove spinner after all scripts have loaded and initialize
+        // customized G+ login button
         $(window).load(function() {
           $(".preloader").fadeOut();;
           render_google_btn();
         });
-        
     }(document, 'script'));
 
     function render_google_btn() {
@@ -66,10 +69,13 @@
           });
     }
 
-    // Google Plus sign-in
+    // Callback for G+ login
     function signInCallback(authResult) {
-        var csrftoken = $('meta[name=csrf-token]').attr('content')
+        // Show the spinner until the login has been processed
         $(".preloader").fadeIn();;
+
+        // Retrieve the hidden CSRF token and send it with the POST request
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
         if (authResult['code']) {
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
@@ -79,6 +85,8 @@
                 }
             })
 
+            // Send the authorization code to the app login handler and wait
+            // for the validation of the access token
             $.ajax({
                 type: 'POST',
                 url: '/gconnect',
@@ -104,16 +112,20 @@
                 }
     }); } }
 
-    // Facebook sign-in
+    // Callback for Facebook sign-in
     function statusChangeCallback(response) {
+        // Retrieve our hidden CSRF token as well as the access token from the
+        // API request to the Facebook server
         var csrftoken = $('meta[name=csrf-token]').attr('content')
         var access_token = FB.getAuthResponse()['accessToken'];
+
         if (response.status === 'connected') {
             FB.api('/me', function(response) {
                 $(".preloader").fadeOut();;
                 $('.status').text('Thanks for logging in.')
                             .css('display', 'table');
 
+                // Also include our CSRF token in the POST request
                 $.ajaxSetup({
                     beforeSend: function(xhr, settings) {
                         if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
@@ -129,7 +141,6 @@
                     data: access_token,
                     contentType: 'application/octet-stream; charset=utf-8',
                     success: function(result) {
-                        // Handle or verify the server response if necessary.
                         if (result) {
                             setTimeout(function() {
                                 window.location.href = "/";
@@ -151,6 +162,8 @@
     }
 
     function checkLoginState() {
+        // Check whether the user is logged into Facebook and/or has already
+        // authorized the app
         $(".preloader").fadeIn();;
         FB.getLoginStatus(function(response) {
                 statusChangeCallback(response);
