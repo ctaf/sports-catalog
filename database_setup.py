@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy import Column, ForeignKey, func
 from sqlalchemy import Integer, String, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
@@ -38,6 +40,15 @@ class Image(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(250), nullable=False)
     item = relationship(Item, backref='image')
+
+    # Properly delete the image object from the image folder.
+    @property
+    def delete_file(self):
+        if self.filename:
+            try:
+                os.remove(os.path.join('static/', self.filename))
+            except OSError, e:
+                print ("Error: %s - %s." % (e.filename, e.strerror))
 
 
 class Category(Base):
