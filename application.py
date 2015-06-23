@@ -29,7 +29,9 @@ from database_setup import Base, Category, Item, Image
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 # Connect to the database and start a session.
-engine = create_engine('sqlite:///catalogitems.db')
+# check_same_thread is necessary for debugging, as the Werkzeug debugger makes
+# use of multithreading
+engine = create_engine('sqlite:///catalogitems.db?check_same_thread=False')
 Base.metadata.bind = engine
 dbsession = sessionmaker(bind=engine)()
 
@@ -40,6 +42,7 @@ app = Flask(__name__)
 CsrfProtect(app)
 app.config['IMG_FOLDER'] = 'static/'  # folder for image upload
 app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
+app.config['CATEGORIES'] = dbsession.query(Category).all()
 
 
 ##### Helper functions #####
@@ -58,6 +61,10 @@ def delete_image(item):
                   item.image.filename))
     except OSError, e:
         print ("Error: %s - %s." % (e.filename, e.strerror))
+
+
+def show_info(message):
+    return render_template('info.html', message=message)
 
 
 def generate_signature(secret, token):
@@ -164,36 +171,42 @@ def category(category_name):
 @require_login
 def newItem(category_name):
 
-    # Make sure that the category list has been initialized
-    if not app.config.get('CATEGORIES'):
-        app.config['CATEGORIES'] = dbsession.query(Category).all()
-
-    category = dbsession.query(Category).filter_by(name=category_name).one()
-
     # Validate the CSRF token from the hidden field in the template
     if request.method == 'POST':
+
+        # Retrieve the item-related data from request
         imgfile = request.files.get('image')
+        name = request.form['name']
+        description = request.form['description']
+        category_name = request.form['category_name']
+        category = dbsession.query(Category)\
+            .filter_by(name=category_name).one()
 
-        # Create a new item object from the POST data, together with an
-        # associated image object, if a valid image was provided.
-        # Use secure_filename() to deal with XSS attacks on the file system.
-        if imgfile and allowed_file(imgfile.filename.lower()):
-            filename = secure_filename(imgfile.filename)
-            imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))
-            image = Image(filename=filename)
-            newItem = Item(name=request.form['name'],
-                           description=request.form['description'],
-                           category=category,
-                           image=image)
+        # At least a name should be provided
+        if name:
+            # Create a new item object from the POST data, together with an
+            # associated image object, if a valid image was provided.
+            # Use secure_filename() to deal with XSS attacks on the file system.
+            if imgfile and allowed_file(imgfile.filename.lower()):
+                filename = secure_filename(imgfile.filename)
+                imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))
+                image = Image(filename=filename)
+                newItem = Item(name=name,
+                               description=description,
+                               category=category,
+                               image=image)
+            else:
+                newItem = Item(name=name,
+                               description=description,
+                               category=category,
+                               image=Image(filename=''))
+
+            dbsession.add(newItem)
+            dbsession.commit()
+            return redirect(url_for('category', category_name=category_name))
+
         else:
-            newItem = Item(name=request.form['name'],
-                           description=request.form['description'],
-                           category=category,
-                           image=Image(filename=''))
-
-        dbsession.add(newItem)
-        dbsession.commit()
-        return redirect(url_for('category', category_name=category.name))
+            return show_info('Error: Please provide a name for the item.')
 
     else:
         return render_template('newitem.html',
@@ -282,9 +295,7 @@ def disconnect():
 
     purge_session(login_session, 'username')
     purge_session(login_session, 'email')
-    message = 'You have been logged out.'
-
-    return render_template('info.html', message=message)
+    return show_info('You have been logged out.')
 
 
 ##### Login functions #####
@@ -345,8 +356,7 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = 'Failed to upgrade the authorization code.'
-        return render_template('info.html', message=response)
+        return show_info('Failed to upgrade the authorization code.')
 
     # Check that the access token is valid.
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
@@ -356,28 +366,24 @@ def gconnect():
 
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
-        response = result.get('error')
-        return render_template('info.html', message=response)
+        return show_info(result.get('error'))
 
     # Verify that the access token is used for the intended user.
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
-        response = "Token's user ID doesn't match given user ID."
-        return render_template('info.html', message=response)
+        return show_info("Token's user ID doesn't match given user ID.")
 
     # Verify that the access token is valid for this app.
     app_id = json.loads(open('g_client_secrets.json', 'r')
                         .read())['web']['client_id']
     if result['issued_to'] != app_id:
-        response = "Token's client ID does not match app's."
-        return render_template('info.html', message=response)
+        return show_info("Token's client ID does not match app's.")
 
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
         purge_session(login_session, 'credentials')
-        response = "Current user is already connected."
-        return render_template('info.html', message=response)
+        return show_info("Current user is already connected.")
 
     # Store the access token in the session for later use.
     login_session['gplus_id'] = gplus_id
@@ -404,14 +410,12 @@ def gdisconnect():
     # Only disconnect a connected user.
     credentials = login_session.get('credentials')
     if credentials is None:
-        message = "Current user not connected."
-        return render_template('info.html', message=message)
+        return show_info("Current user not connected.")
 
     try:
         access_token = credentials.access_token
     except AttributeError:
-        message = "Error: No access token provided."
-        return render_template('info.html', message=message)
+        return show_info("Error: No access token provided.")
 
     # Revoke the permissions previously granted to the app
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
@@ -420,8 +424,7 @@ def gdisconnect():
 
     # For whatever reason, the given token was invalid.
     if result['status'] != '200':
-        response = 'Error: Failed to revoke token.'
-        return render_template('info.html', message=response)
+        return show_info('Error: Failed to revoke token.')
 
 
 ##### API functions #####
@@ -456,7 +459,7 @@ def catalogXML():
 
 
 if __name__ == '__main__':
-    # app.debug = True
+    app.debug = True
     app.secret_key = '\xf4T%\xa6\x1f\xb5\x19\xd6\xf9;S\xbf' +\
                      '\x1fj\xc1\x97\xbe\xce\xe6\x1e^\x06\x8c\xcd'
     app.run(host='0.0.0.0', port=5000)
