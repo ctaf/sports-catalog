@@ -1,5 +1,3 @@
-import random
-import string
 import httplib2
 import json
 import requests
@@ -29,19 +27,19 @@ from database_setup import Base, Category, Item, Image
 # Keep XSS in mind and limit the file extensions
 # Upper case extensions are also accepted
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-CLIENT_ID = json.loads(open('client_secrets.json', 'r')
-                       .read())['web']['client_id']
 
-
+# Connect to the database and start a session.
 engine = create_engine('sqlite:///catalogitems.db')
 Base.metadata.bind = engine
 dbsession = sessionmaker(bind=engine)()
 
+# Start and configure the app. CSRF protection is enabled for all views, i.e.
+# the existence of a valid CSRF token is automatically checked whenever a POST
+# request is made.
 app = Flask(__name__)
 CsrfProtect(app)
 app.config['IMG_FOLDER'] = 'static/'  # folder for image upload
 app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
-
 
 
 ##### Helper functions #####
@@ -53,14 +51,13 @@ def purge_session(session, key):
         return True
 
 
-def genAppSecretProof(app_secret, access_token):
+def generate_signature(secret, token):
     """Generates a sha256 hash of the access token."""
-    h = hmac.new (
-        app_secret.encode('utf-8'),
-        msg=access_token.encode('utf-8'),
+    return hmac.new(
+        secret.encode('utf-8'),
+        msg=token.encode('utf-8'),
         digestmod=hashlib.sha256
-    )
-    return h.hexdigest()
+    ).hexdigest()
 
 
 def allowed_file(filename):
@@ -148,6 +145,10 @@ def category(category_name):
 
 
 ##### CRUD functions #####
+
+# All CRUD functions use the require_login decorator. Otherwise, you could just
+# edit the content by entering the correct URL (which is of course also
+# possible when the editing buttons are not visible).
 
 @app.route('/catalog/<string:category_name>/edit', methods=['GET', 'POST'])
 @white2under
@@ -249,11 +250,8 @@ def deleteItem(category_name, item_name):
 
 @app.route('/login')
 def showLogin():
-    # Generate a CSRF token and store it in the session
-    # state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-    #                 for x in xrange(32))
-    # login_session['state'] = state
-
+    # All views are CSRF-protected via Flask-WTF, so there is no need to
+    # generate and validate a csrf token by hand.
     return render_template('login.html')
 
 
@@ -283,39 +281,33 @@ def disconnect():
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
 
+    # Receive the access_token and use it for requests to the Facebook graph.
     access_token = request.data
-    print "access token received %s " % access_token
-
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
-        'web']['app_id']
-    app_secret = json.loads(
-        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    app_data = json.loads(open('fb_client_secrets.json', 'r').read())['web']
+    app_id, app_secret = app_data['app_id'], app_data['app_secret']
     url = 'https://graph.facebook.com/oauth/access_token?' +\
           'grant_type=fb_exchange_token&client_id=%s' % app_id +\
           '&client_secret=%s&fb_exchange_token=%s' % (app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
-    # Use token to get user info from API
-    # strip expire tag from access token
+    # Strip the expire tag from token, then use it to get the user info.
     token = result.split("&")[0]
-
-    appsecret_proof = genAppSecretProof(app_secret, access_token)
+    appsecret_proof = generate_signature(app_secret, access_token)
     url = 'https://graph.facebook.com/v2.2/me?access_token=%s&appsecret_proof=%s'\
           % (access_token, appsecret_proof)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
+
+    # Store the user info in the session object.
     data = json.loads(result)
     login_session['provider'] = 'facebook'
     login_session['username'] = data["name"]
     login_session['facebook_id'] = data["id"]
     login_session['email'] = data.get("email")
 
-    # The token must be stored in the login_session in order to properly logout
-    # let's strip out the information before the equals sign in our token
-    stored_token = token.split("=")[1]
-    login_session['access_token'] = stored_token
-
+    # Also store the token in order to properly logout later on.
+    login_session['access_token'] = token.split("=")[1]
     message = "Welcome, %s." % login_session['username']
 
     return message
@@ -323,10 +315,11 @@ def fbconnect():
 
 @app.route('/fbdisconnect')
 def fbdisconnect():
+    # Revoke the permissions previously granted to the app
     facebook_id = login_session['facebook_id']
     url = 'https://graph.facebook.com/%s/permissions' % facebook_id
-    h = httplib2.Http()
-    h.request(url, 'DELETE')[1]
+    httplib2.Http().request(url, 'DELETE')[1]
+
     return "You have been logged out."
 
 
@@ -337,7 +330,7 @@ def gconnect():
 
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets('g_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -362,7 +355,9 @@ def gconnect():
         return render_template('info.html', message=response)
 
     # Verify that the access token is valid for this app.
-    if result['issued_to'] != CLIENT_ID:
+    app_id = json.loads(open('g_client_secrets.json', 'r')
+                        .read())['web']['client_id']
+    if result['issued_to'] != app_id:
         response = "Token's client ID does not match app's."
         return render_template('info.html', message=response)
 
