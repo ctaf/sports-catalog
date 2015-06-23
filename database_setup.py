@@ -16,9 +16,10 @@ Base = declarative_base()
 class Item(Base):
     __tablename__ = 'item'
 
+    id = Column(Integer, primary_key=True)
     description = Column(Text)
-    name = Column(String(80), nullable=False, primary_key=True)
-    category_id = Column(Integer, ForeignKey('category.id'), primary_key=True)
+    name = Column(String(80), nullable=False)
+    category_id = Column(Integer, ForeignKey('category.id'))
     image_id = Column(Integer, ForeignKey('image.id'))
     updated_on = Column(DateTime, server_default=func.now(),
                         onupdate=func.now())

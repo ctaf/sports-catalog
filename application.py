@@ -3,8 +3,6 @@ import json
 import requests
 import functools
 import os
-import hashlib
-import hmac
 
 import xml.etree.ElementTree as ET
 from werkzeug import secure_filename
@@ -21,12 +19,9 @@ from oauth2client.client import AccessTokenCredentials
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from helpers import purge_session, show_info, generate_signature, allowed_file
 from database_setup import Base, Category, Item, Image
 
-
-# Keep XSS in mind and limit the file extensions
-# Upper case extensions are also accepted
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 # Connect to the database and start a session.
 # check_same_thread is necessary for debugging, as the Werkzeug debugger makes
@@ -43,43 +38,6 @@ CsrfProtect(app)
 app.config['IMG_FOLDER'] = 'static/'  # folder for image upload
 app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
 app.config['CATEGORIES'] = dbsession.query(Category).all()
-
-
-##### Helper functions #####
-
-def purge_session(session, key):
-    """Performs a safe delete on the login-session object."""
-    if session.get(key):
-        del session[key]
-        return True
-
-
-# def delete_image(item):
-#     """Properly delete the image object from the image folder."""
-#     try:
-#         os.remove(os.path.join(app.config['IMG_FOLDER'],
-#                   item.image.filename))
-#     except OSError, e:
-#         print ("Error: %s - %s." % (e.filename, e.strerror))
-
-
-def show_info(message):
-    return render_template('info.html', message=message)
-
-
-def generate_signature(secret, token):
-    """Generates a sha256 hash of the access token."""
-    return hmac.new(
-        secret.encode('utf-8'),
-        msg=token.encode('utf-8'),
-        digestmod=hashlib.sha256
-    ).hexdigest()
-
-
-def allowed_file(filename):
-    """Returns True for allowed image formats."""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 ##### Decorators #####
@@ -186,7 +144,7 @@ def newItem(category_name):
         if name:
             # Create a new item object from the POST data, together with an
             # associated image object, if a valid image was provided.
-            # Use secure_filename() to deal with XSS attacks on the file system.
+            # Use secure_filename() to deal with XSS attacks on the file system
             if imgfile and allowed_file(imgfile.filename.lower()):
                 filename = secure_filename(imgfile.filename)
                 imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))

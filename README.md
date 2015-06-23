@@ -31,6 +31,14 @@ section (both via header).
 * The `API` button gives access to XML and JSON endpoints. Both provide the
   complete content of the item database.
 
+## Dependencies
+In addition to the Python 2.7 standard library the following Python modules are
+necessary:
+* flask (0.10.1)
+* werkzeug (0.10.4)
+* sqlalchemy (0.8.4)
+* oauth2client (1.4.9)
+
 ## Creator
 
 **Philip Taferner**
