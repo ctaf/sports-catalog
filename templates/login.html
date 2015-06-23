@@ -68,11 +68,20 @@
 
     // Google Plus sign-in
     function signInCallback(authResult) {
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
         $(".preloader").fadeIn();;
         if (authResult['code']) {
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                    }
+                }
+            })
+
             $.ajax({
                 type: 'POST',
-                url: '/gconnect?state={{state}}',
+                url: '/gconnect',
                 processData: false,
                 data: authResult['code'],
                 contentType: 'application/octet-stream; charset=utf-8',
@@ -97,6 +106,7 @@
 
     // Facebook sign-in
     function statusChangeCallback(response) {
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
         var access_token = FB.getAuthResponse()['accessToken'];
         if (response.status === 'connected') {
             FB.api('/me', function(response) {
@@ -104,7 +114,6 @@
                 $('.status').text('Thanks for logging in.')
                             .css('display', 'table');
 
-                var csrftoken = $('meta[name=csrf-token]').attr('content')
                 $.ajaxSetup({
                     beforeSend: function(xhr, settings) {
                         if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {

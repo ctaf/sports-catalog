@@ -282,11 +282,6 @@ def disconnect():
 
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
-    # Validate state token
-    print 'we are here'
-    # if request.args.get('state') != login_session['state']:
-    #     message = "Invalid state parameter."
-    #     return render_template('info.html', message=message)
 
     access_token = request.data
     print "access token received %s " % access_token
@@ -337,10 +332,6 @@ def fbdisconnect():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    # Validate state token
-    if request.args.get('state') != login_session['state']:
-        response = 'Invalid state parameter.'
-        return render_template('info.html', message=response)
     # Obtain authorization code
     code = request.data
 
