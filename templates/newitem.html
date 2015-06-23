@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+
 {% block middle %}
-    <form class="as-table" action="{{url_for('newItem', category_name=category_name )}}"
+
+    <form class="as-table" action="{{ url_for('newItem', category_name=category_name) }}"
       enctype="multipart/form-data" method = 'POST'>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
@@ -20,7 +22,7 @@
       <label for="input3">Category</label>
       <select id="input3" class="form-control" name="category_name">
         {% for cat in config['CATEGORIES'] %}
-          <option>{{cat.name}}</option>
+          <option>{{ cat.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -36,4 +38,5 @@
     </button>
 
   </form>
+
 {% endblock %}

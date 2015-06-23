@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+
 {% block middle %}
+
     {% set cat = item.category.name.replace(' ', '_') %}
     {% set iname = item.name.replace(' ', '_') %}
-    <form class="as-table" action="{{url_for('editItem', category_name=cat, item_name=iname)}}"
+    <form class="as-table" action="{{ url_for('editItem', category_name=cat, item_name=iname) }}"
         enctype="multipart/form-data" method = 'POST'>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
@@ -10,12 +12,14 @@
 
     <div class="form-group form-title">
       <label for="input1">Title</label>
-      <input type="text" id="input1" class="form-control" value="{{item.name}}" name="name">
+      <input type="text" id="input1" class="form-control" value="{{ item.name }}" name="name">
     </div>
 
     <div class="form-group form-description">
       <label for="input2">Description</label>
-      <textarea id="input2" class="form-control" rows="3" name="description">{{item.description|trim}}</textarea>
+      <textarea id="input2" class="form-control" rows="3" name="description">
+        {{ item.description|trim }}
+      </textarea>
     </div>
 
     <div class="form-group form-category">
@@ -27,7 +31,7 @@
         <option>{{currentCat}}</option>
         {% for cat in config['CATEGORIES'] %}
           {% if cat.name != currentCat %}
-            <option>{{cat.name}}</option>
+            <option>{{ cat.name }}</option>
           {% endif %}
         {% endfor %}
       </select>
@@ -36,10 +40,10 @@
     <div class="form-group">
       <label for="input3">Image</label>
       <input type="file" id="input3" name="image">
-      <p class="help-block">Current image file: {{item.image.filename}}</p>
+      <p class="help-block">Current image file: {{ item.image.filename }}</p>
 
       {% if item.image.filename %}
-        <img src="/static/{{item.image.filename}}" class="thumbnail img-resp">
+        <img src="/static/{{ item.image.filename }}" class="thumbnail img-resp">
       {% endif %}
     </div>
 
@@ -48,4 +52,5 @@
     </button>
 
   </form>
+
 {% endblock %}
