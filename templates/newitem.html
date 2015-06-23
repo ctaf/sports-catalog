@@ -9,7 +9,7 @@
       <form class="as-table" action="{{url_for('newItem', category_name=category_name )}}"
         enctype="multipart/form-data" method = 'POST'>
     {% endif %}
-    {{form.hidden_tag()}}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
     {% if item %}
     <p class="lead">Update item</p>

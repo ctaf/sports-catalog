@@ -10,8 +10,7 @@ import hmac
 
 import xml.etree.ElementTree as ET
 from werkzeug import secure_filename
-from flask_wtf import Form
-from flask_wtf.csrf import generate_csrf, validate_csrf
+from flask_wtf.csrf import CsrfProtect
 
 from flask import Flask, render_template, url_for, request
 from flask import redirect, jsonify, make_response
@@ -39,14 +38,10 @@ Base.metadata.bind = engine
 dbsession = sessionmaker(bind=engine)()
 
 app = Flask(__name__)
+CsrfProtect(app)
 app.config['IMG_FOLDER'] = 'static/'  # folder for image upload
 app.config['MAX_CONTENT_LENGTH'] = 2.5 * 1024 * 1024  # max 2.5MB
 
-
-# The Form class from Flask-WTF is only needed for the CSRF token in the
-# templates, so an empty sub class is sufficient.
-class ItemForm(Form):
-        pass
 
 
 ##### Helper functions #####
@@ -163,11 +158,10 @@ def newItem(category_name):
     if not app.config.get('CATEGORIES'):
         app.config['CATEGORIES'] = dbsession.query(Category).all()
 
-    form = ItemForm()
     category = dbsession.query(Category).filter_by(name=category_name).one()
 
     # Validate the CSRF token from the hidden field in the template
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         imgfile = request.files.get('image')
 
         # Create a new item object from the POST data, together with an
@@ -193,8 +187,7 @@ def newItem(category_name):
 
     else:
         return render_template('newitem.html',
-                               category_name=category_name,
-                               form=form)
+                               category_name=category_name)
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/edit',
@@ -203,13 +196,12 @@ def newItem(category_name):
 @require_login
 def editItem(category_name, item_name):
 
-    form = ItemForm()
     editedItem = dbsession.query(Item).join(Category)\
         .filter(Category.name == category_name)\
         .filter(Item.name == item_name).one()
 
     # Validate the CSRF token from the hidden field in the template
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         imgfile = request.files.get('image')
 
         # Check file upload and exchange image, if appropriate
@@ -234,8 +226,7 @@ def editItem(category_name, item_name):
 
     else:
         return render_template('newitem.html',
-                               item=editedItem,
-                               form=form)
+                               item=editedItem)
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/delete',
@@ -262,9 +253,8 @@ def showLogin():
     # state = ''.join(random.choice(string.ascii_uppercase + string.digits)
     #                 for x in xrange(32))
     # login_session['state'] = state
-    login_session['state'] = generate_csrf()
 
-    return render_template('login.html', state=state)
+    return render_template('login.html')
 
 
 @app.route('/logout')
@@ -293,10 +283,10 @@ def disconnect():
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     # Validate state token
+    print 'we are here'
     # if request.args.get('state') != login_session['state']:
-    if not validate_csrf(request.args.get('state')):
-        message = "Invalid state parameter."
-        return render_template('info.html', message=message)
+    #     message = "Invalid state parameter."
+    #     return render_template('info.html', message=message)
 
     access_token = request.data
     print "access token received %s " % access_token

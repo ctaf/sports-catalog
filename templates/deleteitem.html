@@ -2,6 +2,7 @@
 {% block middle %}
     <form action="{{url_for('deleteItem', category_name=item.category.name, item_name=item.name)}}"
         enctype="multipart/form-data" method='POST' class="as-table">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
     <p class="lead">Delete item</p>
 

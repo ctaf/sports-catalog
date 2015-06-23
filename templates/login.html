@@ -103,9 +103,19 @@
                 $(".preloader").fadeOut();;
                 $('.status').text('Thanks for logging in.')
                             .css('display', 'table');
+
+                var csrftoken = $('meta[name=csrf-token]').attr('content')
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                        }
+                    }
+                })
+
                 $.ajax({
                     type: 'POST',
-                    url: '/fbconnect?state={{state}}',
+                    url: '/fbconnect',
                     processData: false,
                     data: access_token,
                     contentType: 'application/octet-stream; charset=utf-8',
