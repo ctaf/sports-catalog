@@ -325,11 +325,11 @@ def fbdisconnect():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    # Obtain authorization code
+    # Obtain the authorization code.
     code = request.data
 
+    # Try to upgrade the authorization code into a credentials object.
     try:
-        # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets('g_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
@@ -338,11 +338,11 @@ def gconnect():
         return render_template('info.html', message=response)
 
     # Check that the access token is valid.
-    access_token = credentials.access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
-           % access_token)
+           % credentials.access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
+
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
         response = result.get('error')
@@ -365,22 +365,21 @@ def gconnect():
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
         purge_session(login_session, 'credentials')
-        return 'Current user is already connected.'
+        response = "Current user is already connected."
+        return render_template('info.html', message=response)
 
     # Store the access token in the session for later use.
     login_session['gplus_id'] = gplus_id
-
-    # store only the access_token
     login_session['credentials'] = credentials.access_token
-    # return credential object
     credentials = AccessTokenCredentials(login_session['credentials'],
                                          'user-agent-value')
-    # Get user info
+    # Get the user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
     params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
-
     data = answer.json()
+
+    # Store the user info
     login_session['username'] = data['name']
     login_session['email'] = data['email']
     login_session['provider'] = 'google'
@@ -400,16 +399,17 @@ def gdisconnect():
     try:
         access_token = credentials.access_token
     except AttributeError:
-        message = "No access token provided."
+        message = "Error: No access token provided."
         return render_template('info.html', message=message)
 
+    # Revoke the permissions previously granted to the app
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
+    # For whatever reason, the given token was invalid.
     if result['status'] != '200':
-        # For whatever reason, the given token was invalid.
-        response = 'Failed to revoke token.'
+        response = 'Error: Failed to revoke token.'
         return render_template('info.html', message=response)
 
 
