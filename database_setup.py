@@ -4,19 +4,24 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
+
 Base = declarative_base()
 
 
+# The combination of name and category is a good key candidate, so use
+# a composite primary key. The updated_on column allows to query for the 10
+# most recent items later on.
 class Item(Base):
     __tablename__ = 'item'
 
-    name = Column(String(80), nullable=False, primary_key=True)
     description = Column(Text)
+    name = Column(String(80), nullable=False, primary_key=True)
     category_id = Column(Integer, ForeignKey('category.id'), primary_key=True)
     image_id = Column(Integer, ForeignKey('image.id'))
     updated_on = Column(DateTime, server_default=func.now(),
                         onupdate=func.now())
 
+    # Data definition for the JSON api.
     @property
     def serialize(self):
         return {
@@ -42,6 +47,7 @@ class Category(Base):
     name = Column(String(250), nullable=False)
     items = relationship(Item, backref='category', lazy='dynamic')
 
+    # Recursive serialization
     @property
     def serialize(self):
         return [i.serialize for i in self.items]

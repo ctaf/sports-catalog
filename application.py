@@ -456,7 +456,7 @@ def catalogXML():
 
 
 if __name__ == '__main__':
-    app.debug = True
+    # app.debug = True
     app.secret_key = '\xf4T%\xa6\x1f\xb5\x19\xd6\xf9;S\xbf' +\
                      '\x1fj\xc1\x97\xbe\xce\xe6\x1e^\x06\x8c\xcd'
     app.run(host='0.0.0.0', port=5000)

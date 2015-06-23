@@ -9,6 +9,7 @@ def fill_db(session, cat, items):
     session.add_all(items)
     session.commit()
 
+
 engine = create_engine('sqlite:///catalogitems.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -48,6 +49,7 @@ items1 = (
 )
 
 fill_db(session, category1, items1)
+
 
 # Biking items
 category2 = Category(name="Mountain biking")
