@@ -51,6 +51,15 @@ def purge_session(session, key):
         return True
 
 
+def delete_image(item):
+    """Properly delete the image object from the image folder."""
+    try:
+        os.remove(os.path.join(app.config['IMG_FOLDER'],
+                  item.image.filename))
+    except OSError, e:
+        print ("Error: %s - %s." % (e.filename, e.strerror))
+
+
 def generate_signature(secret, token):
     """Generates a sha256 hash of the access token."""
     return hmac.new(
@@ -209,6 +218,7 @@ def editItem(category_name, item_name):
         if imgfile and allowed_file(imgfile.filename.lower()):
             filename = secure_filename(imgfile.filename)
             imgfile.save(os.path.join(app.config['IMG_FOLDER'], filename))
+            delete_image(editedItem)
             editedItem.image = Image(filename=filename)
 
         # Update other attributes of item as well
@@ -241,6 +251,7 @@ def deleteItem(category_name, item_name):
         .filter(Item.name == item_name).one()
 
     if request.method == 'POST':
+        delete_image(deleteItem)
         dbsession.delete(deleteItem)
         dbsession.commit()
         return redirect(url_for('category', category_name=category_name))
