@@ -236,7 +236,7 @@ def editItem(category_name, item_name):
                         category_name=newCategory.name.replace(' ', '_')))
 
     else:
-        return render_template('newitem.html',
+        return render_template('edititem.html',
                                item=editedItem)
 
 
