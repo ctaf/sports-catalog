@@ -65,5 +65,5 @@ class Category(Base):
         return [i.serialize for i in self.items]
 
 
-engine = create_engine('sqlite:///catalogitems.db')
+engine = create_engine('postgresql://catalog:catalog@localhost/catdb')
 Base.metadata.create_all(engine)

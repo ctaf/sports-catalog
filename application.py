@@ -26,7 +26,7 @@ from database_setup import Base, Category, Item, Image
 # Connect to the database and start a session.
 # check_same_thread is necessary for debugging, as the Werkzeug debugger makes
 # use of multithreading
-engine = create_engine('sqlite:///catalogitems.db?check_same_thread=False')
+engine = create_engine('postgresql://catalog:catalog@localhost/catdb')
 Base.metadata.bind = engine
 dbsession = sessionmaker(bind=engine)()
 
